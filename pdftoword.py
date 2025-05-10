@@ -1,10 +1,11 @@
-from flask import Flask, request, send_file, render_template, redirect, url_for, flash
+from flask import Flask, request, send_file, render_template
 from werkzeug.utils import secure_filename
 import os
 from pdf2docx import Converter
 from docx2pdf import convert as docx_to_pdf
 from pdf2image import convert_from_path
 import uuid
+import pythoncom  # ← 加入 COM 初始化用
 
 app = Flask(__name__)
 app.secret_key = 'secretkey'
@@ -48,16 +49,25 @@ def convert():
                 converted_files.append(os.path.basename(out_path))
 
             elif mode == 'docx2pdf' and ext == '.docx':
-                out_path = os.path.join(OUTPUT_FOLDER, name + '.pdf')
-                docx_to_pdf(file_path, out_path)
-                converted_files.append(os.path.basename(out_path))
+                try:
+                    pythoncom.CoInitialize()  # 🟢 初始化 COM
 
-            elif mode == 'pdf2img' and ext == '.pdf':
-                images = convert_from_path(file_path)
-                for i, img in enumerate(images):
-                    img_path = os.path.join(OUTPUT_FOLDER, f"{name}_page{i+1}.jpg")
-                    img.save(img_path, 'JPEG')
-                    converted_files.append(os.path.basename(img_path))
+                    temp_uuid = str(uuid.uuid4())
+                    temp_docx = os.path.join(UPLOAD_FOLDER, f"{temp_uuid}.docx")
+                    temp_pdf = os.path.join(UPLOAD_FOLDER, f"{temp_uuid}.pdf")
+
+                    os.rename(file_path, temp_docx)
+                    docx_to_pdf(temp_docx, temp_pdf)
+
+                    final_pdf_path = os.path.join(OUTPUT_FOLDER, name + '.pdf')
+                    os.rename(temp_pdf, final_pdf_path)
+                    os.remove(temp_docx)
+                    converted_files.append(os.path.basename(final_pdf_path))
+
+                    pythoncom.CoUninitialize()  # 🟢 釋放 COM
+                except Exception as e:
+                    errors.append(f"{filename} 轉換失敗：{str(e)}")
+
             else:
                 errors.append(f"{filename} 的副檔名不支援此模式")
 
