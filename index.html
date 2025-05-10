@@ -1,0 +1,536 @@
+<!doctype html>
+<html lang="zh-TW">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>多格式轉換工具</title>
+  <style>
+    :root {
+      --primary-color: #4a6fa5;
+      --primary-hover: #3a5785;
+      --secondary-color: #6c757d;
+      --success-color: #28a745;
+      --error-color: #dc3545;
+      --background-color: #f8f9fa;
+      --card-bg: #ffffff;
+      --text-color: #333333;
+      --border-color: #dee2e6;
+      --shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      --border-radius: 8px;
+    }
+    
+    body {
+      font-family: 'Segoe UI', 'Microsoft JhengHei', sans-serif;
+      background-color: var(--background-color);
+      color: var(--text-color);
+      line-height: 1.6;
+      max-width: 800px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+    }
+    
+    .container {
+      background-color: var(--card-bg);
+      border-radius: var(--border-radius);
+      box-shadow: var(--shadow);
+      padding: 2rem;
+      margin-bottom: 2rem;
+    }
+    
+    h1 {
+      text-align: center;
+      color: var(--primary-color);
+      margin-top: 0;
+      margin-bottom: 1.5rem;
+      padding-bottom: 1rem;
+      border-bottom: 2px solid #eaeaea;
+      font-size: 1.8rem;
+    }
+    
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 1.2rem;
+    }
+    
+    .form-group {
+      margin-bottom: 0.5rem;
+    }
+    
+    label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+      color: #4b5563;
+    }
+    
+    select, button {
+      font-family: inherit;
+      transition: all 0.2s ease;
+    }
+    
+    select {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      border: 1px solid var(--border-color);
+      border-radius: var(--border-radius);
+      background-color: #fff;
+      font-size: 1rem;
+      color: var(--text-color);
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%234a6fa5' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 1rem center;
+      cursor: pointer;
+    }
+    
+    select:focus {
+      outline: none;
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 3px rgba(74, 111, 165, 0.2);
+    }
+    
+    .file-upload {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem;
+      border: 2px dashed var(--border-color);
+      border-radius: var(--border-radius);
+      background-color: #f8f9fa;
+      transition: all 0.2s ease;
+    }
+    
+    .file-upload:hover, .file-upload.drag-over {
+      background-color: #e9ecef;
+      border-color: var(--primary-color);
+    }
+    
+    .file-upload-icon {
+      font-size: 2.5rem;
+      color: var(--primary-color);
+      margin-bottom: 1rem;
+    }
+    
+    .file-upload-text {
+      margin-bottom: 1rem;
+      text-align: center;
+      color: var(--secondary-color);
+    }
+    
+    .file-upload-btn {
+      background-color: #e9ecef;
+      color: var(--text-color);
+      border: 1px solid var(--border-color);
+      padding: 0.5rem 1rem;
+      border-radius: var(--border-radius);
+      cursor: pointer;
+      font-weight: 500;
+    }
+    
+    .file-upload-btn:hover {
+      background-color: #dee2e6;
+    }
+    
+    input[type="file"] {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      top: 0;
+      left: 0;
+      opacity: 0;
+      cursor: pointer;
+    }
+    
+    .file-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      margin-top: 1rem;
+    }
+    
+    .file-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background-color: #f1f5f9;
+      padding: 0.75rem 1rem;
+      border-radius: var(--border-radius);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      transition: transform 0.2s;
+    }
+    
+    .file-item:hover {
+      transform: translateY(-2px);
+    }
+    
+    .file-name {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      word-break: break-all;
+      font-size: 0.95rem;
+    }
+    
+    .file-icon {
+      color: var(--primary-color);
+    }
+    
+    .file-remove {
+      background-color: transparent;
+      color: var(--error-color);
+      border: none;
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 1.2rem;
+      display: flex;
+      align-items: center;
+      transition: background-color 0.2s;
+    }
+    
+    .file-remove:hover {
+      background-color: rgba(220, 53, 69, 0.1);
+    }
+    
+    .submit-btn {
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      padding: 0.9rem 1.5rem;
+      border-radius: var(--border-radius);
+      cursor: pointer;
+      font-size: 1rem;
+      font-weight: 600;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 0.5rem;
+      margin-top: 1rem;
+      transition: background-color 0.2s;
+    }
+    
+    .submit-btn:hover {
+      background-color: var(--primary-hover);
+    }
+    
+    .submit-btn:disabled {
+      background-color: var(--secondary-color);
+      cursor: not-allowed;
+    }
+    
+    .mode-icon {
+      display: inline-block;
+      width: 1.2rem;
+      height: 1.2rem;
+      margin-right: 0.5rem;
+    }
+    
+    .file-type {
+      display: inline-block;
+      padding: 0.2rem 0.4rem;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: bold;
+      margin-left: 0.5rem;
+      text-transform: uppercase;
+    }
+    
+    .file-type.pdf {
+      background-color: #ffebee;
+      color: #d32f2f;
+    }
+    
+    .file-type.docx {
+      background-color: #e3f2fd;
+      color: #1976d2;
+    }
+    
+    .selected-mode {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.25rem 0.5rem;
+      background-color: #e6f0f9;
+      color: var(--primary-color);
+      border-radius: 4px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      margin-left: 0.5rem;
+    }
+    
+    .footer {
+      text-align: center;
+      color: var(--secondary-color);
+      font-size: 0.9rem;
+      margin-top: 1rem;
+    }
+    
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+      100% { transform: scale(1); }
+    }
+    
+    .animate-pulse {
+      animation: pulse 2s infinite;
+    }
+    
+    @media (max-width: 576px) {
+      body {
+        padding: 1rem 0.5rem;
+      }
+      
+      .container {
+        padding: 1.5rem 1rem;
+      }
+      
+      h1 {
+        font-size: 1.5rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🛠 多格式轉換工具</h1>
+    
+    <form id="uploadForm" method="post" action="/convert" enctype="multipart/form-data">
+      <div class="form-group">
+        <label for="mode">選擇轉換模式：</label>
+        <select id="mode" name="mode" required>
+          <option value="pdf2docx">📄 PDF ➜ Word 文檔</option>
+          <option value="docx2pdf">📝 Word ➜ PDF 文檔</option>
+          <option value="pdf2img">🖼️ PDF ➜ 圖片 (JPG)</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>上傳檔案：<span id="selectedMode" class="selected-mode">📄 PDF ➜ Word</span></label>
+        <div class="file-upload" id="dropZone">
+          <div class="file-upload-icon">📁</div>
+          <div class="file-upload-text">
+            拖放檔案到這裡或點擊選擇檔案
+            <div style="margin-top: 0.5rem; font-size: 0.85rem;">支援的格式：<span id="supportedFormats">.pdf</span></div>
+          </div>
+          <label class="file-upload-btn">選擇檔案</label>
+          <input type="file" id="fileInput" multiple accept=".pdf">
+        </div>
+        
+        <div class="file-list" id="fileList"></div>
+      </div>
+
+      <input type="hidden" name="file" id="hiddenFileInput">
+      <button type="submit" id="submitBtn" class="submit-btn" disabled>
+        <span>開始轉換並下載</span>
+      </button>
+    </form>
+  </div>
+  
+  <div class="footer">
+    © 2024 Huici
+  </div>
+
+  <script>
+    const fileInput = document.getElementById('fileInput');
+    const fileList = document.getElementById('fileList');
+    const uploadForm = document.getElementById('uploadForm');
+    const mode = document.getElementById('mode');
+    const selectedMode = document.getElementById('selectedMode');
+    const supportedFormats = document.getElementById('supportedFormats');
+    const submitBtn = document.getElementById('submitBtn');
+    const dropZone = document.getElementById('dropZone');
+    let selectedFiles = [];
+    
+    // 更新支援的檔案格式和模式顯示
+    function updateModeDisplay() {
+      const selectedOption = mode.options[mode.selectedIndex];
+      selectedMode.textContent = selectedOption.text.replace('📄 ', '').replace('📝 ', '').replace('🖼️ ', '');
+      
+      // 根據模式設定支援的檔案格式
+      switch(mode.value) {
+        case 'pdf2docx':
+        case 'pdf2img':
+          fileInput.accept = '.pdf';
+          supportedFormats.textContent = '.pdf';
+          break;
+        case 'docx2pdf':
+          fileInput.accept = '.docx';
+          supportedFormats.textContent = '.docx';
+          break;
+      }
+      
+      // 清除選擇的檔案，因為格式要求可能變了
+      selectedFiles = [];
+      updateFileList();
+      validateForm();
+    }
+    
+    // 初始化和模式變更時更新
+    updateModeDisplay();
+    mode.addEventListener('change', updateModeDisplay);
+    
+    // 檔案選擇事件
+    fileInput.addEventListener('change', () => {
+      const validFiles = Array.from(fileInput.files).filter(file => {
+        const extension = '.' + file.name.split('.').pop().toLowerCase();
+        return fileInput.accept.includes(extension);
+      });
+      
+      for (let i = 0; i < validFiles.length; i++) {
+        if (!selectedFiles.some(f => f.name === validFiles[i].name)) {
+          selectedFiles.push(validFiles[i]);
+        }
+      }
+      
+      updateFileList();
+      validateForm();
+    });
+    
+    // 拖放功能
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+      dropZone.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+      });
+    });
+    
+    ['dragenter', 'dragover'].forEach(eventName => {
+      dropZone.addEventListener(eventName, () => {
+        dropZone.classList.add('drag-over');
+      });
+    });
+    
+    ['dragleave', 'drop'].forEach(eventName => {
+      dropZone.addEventListener(eventName, () => {
+        dropZone.classList.remove('drag-over');
+      });
+    });
+    
+    dropZone.addEventListener('drop', (e) => {
+      const dt = e.dataTransfer;
+      const validFiles = Array.from(dt.files).filter(file => {
+        const extension = '.' + file.name.split('.').pop().toLowerCase();
+        return fileInput.accept.includes(extension);
+      });
+      
+      for (let i = 0; i < validFiles.length; i++) {
+        if (!selectedFiles.some(f => f.name === validFiles[i].name)) {
+          selectedFiles.push(validFiles[i]);
+        }
+      }
+      
+      updateFileList();
+      validateForm();
+    });
+    
+    // 更新檔案列表顯示
+    function updateFileList() {
+      fileList.innerHTML = '';
+      
+      if (selectedFiles.length === 0) {
+        submitBtn.disabled = true;
+        return;
+      }
+      
+      selectedFiles.forEach((file, index) => {
+        const extension = file.name.split('.').pop().toLowerCase();
+        
+        const div = document.createElement('div');
+        div.className = 'file-item';
+        
+        const nameSpan = document.createElement('div');
+        nameSpan.className = 'file-name';
+        
+        // 根據檔案類型選擇圖標
+        const fileIcon = document.createElement('span');
+        fileIcon.className = 'file-icon';
+        
+        if (extension === 'pdf') {
+          fileIcon.innerHTML = '📄';
+        } else if (extension === 'docx') {
+          fileIcon.innerHTML = '📝';
+        } else {
+          fileIcon.innerHTML = '📋';
+        }
+        
+        nameSpan.appendChild(fileIcon);
+        nameSpan.appendChild(document.createTextNode(file.name));
+        
+        // 添加檔案類型標籤
+        const fileType = document.createElement('span');
+        fileType.className = `file-type ${extension}`;
+        fileType.textContent = extension;
+        nameSpan.appendChild(fileType);
+        
+        div.appendChild(nameSpan);
+        
+        // 刪除按鈕
+        const removeBtn = document.createElement('button');
+        removeBtn.type = 'button';
+        removeBtn.className = 'file-remove';
+        removeBtn.innerHTML = '×';
+        removeBtn.onclick = () => removeFile(index);
+        
+        div.appendChild(removeBtn);
+        fileList.appendChild(div);
+      });
+      
+      validateForm();
+    }
+    
+    // 移除檔案
+    function removeFile(index) {
+      selectedFiles.splice(index, 1);
+      updateFileList();
+    }
+    
+    // 表單驗證
+    function validateForm() {
+      submitBtn.disabled = selectedFiles.length === 0;
+      
+      if (selectedFiles.length > 0) {
+        submitBtn.classList.add('animate-pulse');
+        setTimeout(() => {
+          submitBtn.classList.remove('animate-pulse');
+        }, 2000);
+      }
+    }
+    
+    // 表單提交
+    uploadForm.onsubmit = function (e) {
+      e.preventDefault();
+      
+      if (selectedFiles.length === 0) {
+        return false;
+      }
+      
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<span>處理中，請稍候...</span>';
+      
+      const formData = new FormData();
+      formData.append('mode', mode.value);
+      
+      selectedFiles.forEach(file => {
+        formData.append('file', file);
+      });
+      
+      fetch('/convert', {
+        method: 'POST',
+        body: formData
+      })
+        .then(response => response.text())
+        .then(html => {
+          document.open();
+          document.write(html);
+          document.close();
+        })
+        .catch(err => {
+          alert("上傳失敗: " + err);
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = '<span>開始轉換並下載</span>';
+        });
+    };
+  </script>
+</body>
+</html>
